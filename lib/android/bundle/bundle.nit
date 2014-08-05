@@ -259,29 +259,29 @@ extern class NativeBundle in "Java" `{ android.os.Bundle `}
 
 		return nit_array;
 	`}
-	fun get_string_array_list(key: JavaString): Array[JavaString]
-		import Array[JavaString], Array[JavaString].add in "Java" `{
+	fun get_string_array_list(key: JavaString): Array[String]
+		import ElementPinner.with_array, ElementPinner.add, ElementPinner.array in "Java" `{
 		ArrayList<String> java_array = recv.getStringArrayList(key); 
-		int nit_array = new_Array_of_JavaString();
+		int nit_array = new_ElementPinner_with_array();
 
 		if (java_array == null) return nit_array;
 
 		for (String element: java_array)
-			Array_of_JavaString_add(nit_array, element);
+			ElementPinner_add(nit_array, element);
 
-		return nit_array;
+		return ElementPinner_array(nit_array);
 	`}
-	fun get_char_sequence_array_list(key: JavaString): Array[JavaString]
-		import Array[JavaString], Array[JavaString].add in "Java" `{
+	fun get_char_sequence_array_list(key: JavaString): Array[String]
+		import ElementPinner.with_array, ElementPinner.add, ElementPinner.array in "Java" `{
 		ArrayList<CharSequence> java_array = recv.getCharSequenceArrayList(key); 
-		int nit_array = new_Array_of_JavaString();
+		int nit_array = new_ElementPinner_with_array();
 
 		if (java_array == null) return nit_array;
 
 		for (CharSequence element: java_array)
-			Array_of_JavaString_add(nit_array, (String) element);
+			ElementPinner_add(nit_array, (String) element);
 
-		return nit_array;
+		return ElementPinner_array(nit_array);
 	`}
 	fun get_boolean_array(key: JavaString): Array[Bool]
 		import Array[Bool], Array[Bool].add in "Java" `{ 
@@ -380,29 +380,29 @@ extern class NativeBundle in "Java" `{ android.os.Bundle `}
 			
 		return nit_array;
 	`}
-	fun get_string_array(key: JavaString): Array[JavaString]
-		import Array[JavaString], Array[JavaString].add in "Java" `{ 
+	fun get_string_array(key: JavaString): Array[String]
+		import ElementPinner.with_array, ElementPinner.add, ElementPinner.array in "Java" `{
 		String[] java_array = recv.getStringArray(key); 
-		int nit_array = new_Array_of_JavaString();
+		int nit_array = new_ElementPinner_with_array();
 		
 		if (java_array == null) return nit_array;
 
 		for(int i=0; i < java_array.length; ++i)
-			Array_of_JavaString_add(nit_array, java_array[i]);
+			ElementPinner_add(nit_array, java_array[i]);
 			
-		return nit_array;
+		return ElementPinner_array(nit_array);
 	`}
-	fun get_char_sequence_array(key: JavaString): Array[JavaString]
-		import Array[JavaString], Array[JavaString].add in "Java" `{ 
+	fun get_char_sequence_array(key: JavaString): Array[String]
+		import ElementPinner.with_array, ElementPinner.add, ElementPinner.array in "Java" `{
 		CharSequence[] java_array = recv.getCharSequenceArray(key); 
-		int nit_array = new_Array_of_JavaString();
+		int nit_array = new_ElementPinner_with_array();
 		
 		if (java_array == null) return nit_array;
 
 		for(int i=0; i < java_array.length; ++i)
-			Array_of_JavaString_add(nit_array, (String) java_array[i]);
+			ElementPinner_add(nit_array, (String)java_array[i]);
 			
-		return nit_array;
+		return ElementPinner_array(nit_array);
 	`}
 	fun describe_contents: Int in "Java" `{ return recv.describeContents(); `}
 	fun to_string: JavaString in "Java" `{ return recv.toString(); `}
@@ -550,7 +550,7 @@ class Bundle
 
 		if return_value == "" then return null
 
-		return return_value.to_s
+		return return_value
 	end
 
 	# Retrieves the `Bool` value corresponding to the given key
@@ -654,18 +654,13 @@ class Bundle
 	do
 		var string_array = new Array[String]
 		sys.jni_env.push_local_frame(1)
+
 		var return_value = native_bundle.get_string_array(key.to_java_string)
-
-		for element in return_value 
-		do
-			string_array.add(element.to_s)
-		end
-
 		sys.jni_env.pop_local_frame
 		
 		if return_value.is_empty then return null
 
-		return string_array
+		return return_value
 	end
 end
 
@@ -752,6 +747,35 @@ redef class Array[E]
 			end
 
 			bundle.put_string_array(key, java_string_array)
+		end
+	end
+end
+
+# Allows JavaString collection copy through FFI with Java
+private class ElementPinner
+	var hashset: HashSet[String]
+	var array: Array[String]
+	var is_hashset = false
+	var is_array = false
+
+	init with_hashset
+	do
+		self.hashset = new HashSet[String]
+		self.is_hashset = true
+	end
+
+	init with_array
+	do
+		self.array = new Array[String]
+		self.is_array = true
+	end
+
+	fun add(element: JavaString)
+	do
+		if is_hashset then
+			hashset.add element.to_s
+		else if is_array then
+			array.add element.to_s
 		end
 	end
 end

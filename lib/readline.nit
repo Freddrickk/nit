@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # GNU readline library wrapper
-module readline is ldflags "-L/usr/local/lib -I/usr/local/include -lreadline"
+module readline is ldflags "-lreadline"
 
 in "C" `{
 	#include <readline/readline.h>
